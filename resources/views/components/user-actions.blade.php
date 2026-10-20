@@ -1,0 +1,2 @@
+@props(['user'])
+<details class="dropdown row-dropdown"><summary class="icon-button" aria-label="Actions for {{ $user->name }}"><x-icon name="more"/></summary><div class="dropdown-panel"><a href="{{ route('users.show',$user) }}"><x-icon name="eye"/>View profile</a>@can('update',$user)<a href="{{ route('users.edit',$user) }}"><x-icon name="edit"/>Edit user</a>@endcan</div></details>

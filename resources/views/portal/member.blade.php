@@ -1,0 +1,6 @@
+@extends('layouts.app')
+@section('title','My Workspace')
+@section('content')
+<x-page-header :title="'Welcome back, '.auth()->user()->name" description="Your personal space within LaraControl." eyebrow="YOUR PERSONAL WORKSPACE"/>
+<div class="member-grid"><section class="card member-card"><span class="eyebrow">YOUR ACCOUNT</span><x-avatar :name="auth()->user()->name" size="large"/><h2>{{ auth()->user()->name }}</h2><p>{{ auth()->user()->email }}</p><div class="profile-badges"><x-badge tone="green"><span class="status-dot"></span>Active</x-badge><x-badge tone="blue">{{ auth()->user()->role?->name ?? 'Unassigned' }}</x-badge></div><hr><a class="button" href="{{ route('profile.edit') }}">Manage My Account <x-icon name="arrow"/></a></section><section class="card guidance-card"><span class="guidance-icon"><x-icon name="shield"/></span><h2>Clear responsibilities.<br>Confident access.</h2><p>Your administrator assigns access based on your role. If your work needs additional permissions, contact them to review your account.</p><hr><h3>Make yourself at home</h3><p>Choose a light or dark workspace and keep your profile up to date.</p><a class="button secondary" href="{{ route('settings') }}">Workspace Settings <x-icon name="arrow"/></a></section></div>
+@endsection

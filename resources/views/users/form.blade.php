@@ -1,0 +1,20 @@
+@extends('layouts.app')
+@section('title',$subject->exists?'Edit User':'Add User')
+@section('content')
+<a class="back-link" href="{{ route('users.index') }}"><x-icon name="arrow"/>Back to users</a>
+<x-page-header :title="$subject->exists?'Edit User':'Add User'" :description="$subject->exists?'Update account details and workspace access.':'Bring a new person into your workspace.'"/>
+<div class="form-layout"><form class="card form-card" method="POST" action="{{ $subject->exists?route('users.update',$subject):route('users.store') }}" data-confirm="Save this account with the selected access?">
+    @csrf @if($subject->exists)@method('PUT')@endif
+    <div class="form-section-heading"><span class="section-icon"><x-icon name="user"/></span><div><h2>Personal Information</h2><p>The details that identify this person.</p></div></div>
+    <div class="form-grid"><x-form-input name="name" label="Full name" :value="$subject->name" required maxlength="100" autocomplete="name"/><x-form-input name="email" label="Email address" type="email" :value="$subject->email" required autocomplete="email"/></div>
+    <hr><div class="form-section-heading"><span class="section-icon"><x-icon name="lock"/></span><div><h2>Account Security</h2><p>{{ $subject->exists?'Leave the password blank to keep the current one.':'Set an initial password for this account.' }}</p></div></div>
+    <div class="form-grid"><x-form-input name="password" :label="$subject->exists?'New password (optional)':'Password'" type="password" :required="!$subject->exists" minlength="12" autocomplete="new-password" hint="Use at least 12 characters."/><x-form-input name="password_confirmation" label="Confirm password" type="password" :required="!$subject->exists" autocomplete="new-password"/></div>
+    <hr><div class="form-section-heading"><span class="section-icon"><x-icon name="shield"/></span><div><h2>Workspace Access</h2><p>Choose the appropriate role and account status.</p></div></div>
+    <div class="form-grid">
+        @if(auth()->user()->isAdmin())<div class="form-field"><label for="role_id">Role <span class="required-mark" aria-hidden="true">*</span></label><select id="role_id" name="role_id" required @if($errors->has('role_id')) aria-invalid="true" aria-describedby="role-error" @endif>@foreach($roles as $role)<option value="{{ $role->id }}" @selected(old('role_id',$subject->role_id ?? $roles->firstWhere('name','Member')?->id)==$role->id)>{{ $role->name }}</option>@endforeach</select>@error('role_id')<small class="field-error" id="role-error">{{ $message }}</small>@enderror</div>
+        @else<div class="form-field"><label>Role</label><div class="readonly-field"><x-badge tone="blue">Member</x-badge><span>Assigned automatically</span></div></div>@endif
+        <div class="form-field"><label for="is_active">Account status</label><select id="is_active" name="is_active"><option value="1" @selected(old('is_active',$subject->is_active)==1)>Active - can sign in</option><option value="0" @selected(old('is_active',$subject->is_active)==0)>Inactive - sign in blocked</option></select></div>
+    </div>
+    <div class="form-footer"><a class="button secondary" href="{{ route('users.index') }}">Cancel</a><button class="button"><x-icon name="check"/>{{ $subject->exists?'Save Changes':'Create User' }}</button></div>
+</form><aside class="form-aside"><div class="card guidance-card"><span class="guidance-icon"><x-icon name="shield"/></span><h3>The right access matters</h3><p>{{ auth()->user()->isAdmin()?'Assign the least access needed for this person to do their work.':'Managers can create and edit member accounts. Role assignments are reserved for administrators.' }}</p><hr><h3>Account status</h3><p>Inactive accounts cannot sign in. Existing sessions are blocked on their next protected request.</p><hr><span class="guidance-foot"><x-icon name="activity"/>Changes are recorded in the activity log.</span></div></aside></div>
+@endsection

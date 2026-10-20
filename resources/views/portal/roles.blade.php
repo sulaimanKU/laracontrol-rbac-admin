@@ -1,0 +1,22 @@
+@extends('layouts.app')
+@section('title','Roles & Permissions')
+@section('content')
+<x-page-header title="Roles & Permissions" description="Control what each role can access and manage."><span class="date-chip"><x-icon name="shield"/>{{ count($permissions) }} capabilities &middot; {{ $roles->count() }} roles</span></x-page-header>
+<div class="roles-grid">
+@foreach($roles as $role)
+    @php($tone = match($role->name){'Admin'=>'violet','Manager'=>'amber',default=>'blue'})
+    <section class="card role-card"><div class="role-card-top"><span class="role-card-icon tone-{{ $tone }}"><x-icon :name="$role->name==='Admin'?'shield':($role->name==='Manager'?'users':'user')"/></span><x-badge :tone="$role->name==='Admin'?'violet':'neutral'">{{ $role->name==='Admin'?'Protected role':'Configurable' }}</x-badge></div><h2>{{ $role->name==='Admin'?'Administrator':$role->name }}</h2><p>{{ match($role->name){'Admin'=>'Full workspace oversight and access administration.','Manager'=>'Day-to-day people operations and member management.',default=>'Personal account access, with capabilities assigned by an administrator.'} }}</p><div class="role-card-stats"><span><x-icon name="users"/><strong>{{ $role->users_count }}</strong> users</span><span><x-icon name="shield"/><strong>{{ count($role->permissions) }}</strong> permissions</span></div></section>
+@endforeach
+</div>
+<section class="card permission-card"><div class="card-heading"><div><h2>Permission Matrix</h2><p>One permission model, enforced throughout the workspace.</p></div><x-badge tone="green"><x-icon name="shield"/>Server-side authorization</x-badge></div>
+    <div class="table-wrap"><table class="permission-matrix"><thead><tr><th>Permission</th>@foreach($roles as $role)<th>{{ $role->name==='Admin'?'Administrator':$role->name }}<small>{{ $role->name==='Admin'?'Protected':'Role capabilities' }}</small></th>@endforeach</tr></thead><tbody>
+    @foreach($permissions as $permission)<tr><td><strong>{{ ucfirst($permission->value) }}</strong><small>{{ match($permission->value){'access dashboard'=>'View workspace metrics and registration analytics.','view users'=>'Browse the user directory and account details.','manage users'=>'Create or edit accounts within policy boundaries.','view roles'=>'Inspect roles and their assigned capabilities.','manage roles'=>'Update permissions; also requires the Admin role.','view audit logs'=>'Review recorded administrative activity.'} }}</small></td>
+        @foreach($roles as $role)
+            @php($editable = $role->name!=='Admin' && auth()->user()->isAdmin() && auth()->user()->can('manage roles'))
+            <td>@if($editable)<label class="matrix-checkbox"><input type="checkbox" name="permissions[]" value="{{ $permission->value }}" form="permissions-{{ $role->id }}" @checked(in_array($permission->value,$role->permissions)) aria-label="{{ ucfirst($permission->value) }} for {{ $role->name }}"><span class="sr-only">{{ ucfirst($permission->value) }} for {{ $role->name }}</span></label>@else<span class="permission-state {{ in_array($permission->value,$role->permissions)?'enabled':'disabled' }}">@if(in_array($permission->value,$role->permissions))<x-icon name="check"/><span class="sr-only">Enabled</span>@else<span aria-hidden="true">&mdash;</span><span class="sr-only">Disabled</span>@endif</span>@endif</td>
+        @endforeach
+    </tr>@endforeach
+    </tbody><tfoot><tr><td><span class="small-text muted">Changes apply to every user in the role.</span></td>@foreach($roles as $role)<td>@if($role->name!=='Admin' && auth()->user()->isAdmin() && auth()->user()->can('manage roles'))<form id="permissions-{{ $role->id }}" method="POST" action="{{ route('roles.update',$role) }}" data-confirm="Apply these permissions to every {{ $role->name }} account?">@csrf @method('PUT')<button class="button secondary button-small">Save {{ $role->name }}</button></form>@else<span class="protected-label"><x-icon :name="$role->name==='Admin'?'lock':'eye'"/>{{ $role->name==='Admin'?'Protected':'View only' }}</span>@endif</td>@endforeach</tr></tfoot></table></div>
+</section>
+<div class="permission-notes"><div class="info-note"><x-icon name="lock"/><span><strong>Protected by design</strong>Administrator capabilities cannot be changed here. Managers can edit members, but cannot assign roles or edit other managers.</span></div><div class="info-note"><x-icon name="activity"/><span><strong>A change you can trace</strong>Permission updates are recorded in the audit log alongside the previous and new capability lists.</span></div></div>
+@endsection

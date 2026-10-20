@@ -1,0 +1,2 @@
+@props(['label','value','description','icon','tone'=>'teal'])
+<article class="card stat"><div class="stat-top"><span>{{ $label }}</span><span class="stat-icon tone-{{ $tone }}"><x-icon :name="$icon"/></span></div><strong>{{ number_format($value) }}</strong><small><span class="stat-dot tone-{{ $tone }}"></span>{{ $description }}</small></article>
